@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cam-Link Viewer</title>
+
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      background: #080b12;
+      color: white;
+      font-family: Arial;
+      text-align: center;
+      padding: 25px;
+    }
+
+    .box {
+      max-width: 800px;
+      margin: auto;
+      background: #111722;
+      padding: 20px;
+      border-radius: 20px;
+    }
+
+    input {
+      width: 90%;
+      padding: 15px;
+      border-radius: 10px;
+      border: 0;
+      margin: 10px;
+      font-size: 16px;
+    }
+
+    button {
+      width: 95%;
+      padding: 15px;
+      border: 0;
+      border-radius: 10px;
+      background: #2196f3;
+      color: white;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    video {
+      width: 100%;
+      margin-top: 20px;
+      border-radius: 15px;
+      background: black;
+    }
+
+    #status {
+      margin: 15px;
+      color: #aaa;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="box">
+
+  <h1>👁️ Cam-Link</h1>
+
+  <p>مشاهدة البث المباشر</p>
+
+  <input id="senderId" placeholder="اكتب كود صاحبك هنا">
+
+  <button onclick="connectToCamera()">
+    📡 مشاهدة البث
+  </button>
+
+  <div id="status">
+    جاهز
+  </div>
+
+  <video id="remoteVideo" autoplay playsinline controls></video>
+
+</div>
+
+<script>
+
+let peer;
+let currentCall;
+
+peer = new Peer();
+
+peer.on("open", function(id) {
+
+  document.getElementById("status").innerText =
+    "🟢 جاهز للمشاهدة";
+
+});
+
+peer.on("error", function(error) {
+
+  console.log(error);
+
+  document.getElementById("status").innerText =
+    "❌ حدث خطأ في الاتصال";
+
+});
+
+
+function connectToCamera() {
+
+  const senderId =
+    document.getElementById("senderId").value.trim();
+
+  if (!senderId) {
+
+    alert("اكتب كود صاحبك أولاً");
+
+    return;
+  }
+
+  document.getElementById("status").innerText =
+    "📡 جاري الاتصال...";
+
+  /*
+    لا نستخدم كاميرا اللابتوب هنا.
+    الصفحة تستقبل بث صاحبك فقط.
+  */
+
+  currentCall = peer.call(senderId, null);
+
+  currentCall.on("stream", function(stream) {
+
+    const video =
+      document.getElementById("remoteVideo");
+
+    video.srcObject = stream;
+
+    video.play();
+
+    document.getElementById("status").innerText =
+      "🟢 أنت تشاهد البث الآن";
+
+  });
+
+  currentCall.on("close", function() {
+
+    document.getElementById("status").innerText =
+      "⛔ تم إيقاف البث";
+
+    document.getElementById("remoteVideo").srcObject =
+      null;
+
+  });
+
+  currentCall.on("error", function(error) {
+
+    console.log(error);
+
+    document.getElementById("status").innerText =
+      "❌ فشل الاتصال";
+
+  });
+
+}
+
+</script>
+
+</body>
+</html>
