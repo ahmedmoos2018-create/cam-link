@@ -10,7 +10,8 @@
         .card { background: #1e293b; padding: 20px; border-radius: 12px; max-width: 400px; margin: auto; }
         button { background: #2563eb; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-size: 16px; cursor: pointer; margin-top: 10px; width: 100%; }
         video { width: 100%; border-radius: 8px; margin-top: 15px; background: #000; }
-        .id-box { background: #334155; padding: 10px; border-radius: 6px; font-weight: bold; font-size: 18px; color: #38bdf8; word-break: break-all; margin-top: 10px; }
+        .id-box { background: #334155; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 16px; color: #38bdf8; word-break: break-all; margin-top: 10px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        .copy-btn { background: #10b981; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 14px; cursor: pointer; width: auto; margin: 0; white-space: nowrap; }
     </style>
 </head>
 <body>
@@ -19,9 +20,12 @@
         <p>اضغط لبدء البث ومشاركة الكاميرا</p>
         <button onclick="startStream()">بدء البث الأن</button>
         <div id="status" style="margin-top: 15px;"></div>
-        <div id="peer-id-container" style="display:none;">
+        <div id="peer-id-container" style="display:none; margin-top: 15px;">
             <p>الكود الخاص بك (ابعته لصاحبك):</p>
-            <div id="peer-id" class="id-box">جاري الإنشاء...</div>
+            <div class="id-box">
+                <span id="peer-id">جاري الإنشاء...</span>
+                <button class="copy-btn" id="copyBtn" onclick="copyCode()">📋 نسخ</button>
+            </div>
         </div>
         <video id="localVideo" autoplay playsinline muted></video>
     </div>
@@ -29,6 +33,7 @@
     <script>
         let peer;
         let localStream;
+        let currentId = '';
 
         async function startStream() {
             try {
@@ -37,6 +42,7 @@
                 
                 peer = new Peer();
                 peer.on('open', (id) => {
+                    currentId = id;
                     document.getElementById('peer-id-container').style.display = 'block';
                     document.getElementById('peer-id').innerText = id;
                     document.getElementById('status').innerText = '🟢 جاهز للاتصال!';
@@ -49,6 +55,19 @@
             } catch (err) {
                 alert('يرجى السماح بالوصول للكاميرا والمايك');
             }
+        }
+
+        function copyCode() {
+            if (!currentId) return;
+            navigator.clipboard.writeText(currentId).then(() => {
+                const btn = document.getElementById('copyBtn');
+                btn.innerText = '✅ تم النسخ!';
+                btn.style.background = '#059669';
+                setTimeout(() => {
+                    btn.innerText = '📋 نسخ';
+                    btn.style.background = '#10b981';
+                }, 2000);
+            });
         }
     </script>
 </body>
