@@ -1,168 +1,56 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cam-Link Viewer</title>
-
-  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
-
-  <style>
-    body {
-      margin: 0;
-      background: #080b12;
-      color: white;
-      font-family: Arial;
-      text-align: center;
-      padding: 25px;
-    }
-
-    .box {
-      max-width: 800px;
-      margin: auto;
-      background: #111722;
-      padding: 20px;
-      border-radius: 20px;
-    }
-
-    input {
-      width: 90%;
-      padding: 15px;
-      border-radius: 10px;
-      border: 0;
-      margin: 10px;
-      font-size: 16px;
-    }
-
-    button {
-      width: 95%;
-      padding: 15px;
-      border: 0;
-      border-radius: 10px;
-      background: #2196f3;
-      color: white;
-      font-size: 18px;
-      font-weight: bold;
-    }
-
-    video {
-      width: 100%;
-      margin-top: 20px;
-      border-radius: 15px;
-      background: black;
-    }
-
-    #status {
-      margin: 15px;
-      color: #aaa;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cam-Link - مشاهدة البث</title>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <style>
+        body { font-family: sans-serif; background: #0f172a; color: #fff; text-align: center; padding: 20px; }
+        .card { background: #1e293b; padding: 20px; border-radius: 12px; max-width: 500px; margin: auto; }
+        input { width: 90%; padding: 12px; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: #fff; font-size: 16px; text-align: center; margin-bottom: 15px; }
+        button { background: #2563eb; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-size: 16px; cursor: pointer; width: 95%; font-weight: bold; }
+        button:hover { background: #1d4ed8; }
+        video { width: 100%; border-radius: 8px; margin-top: 15px; background: #000; min-height: 250px; }
+        #status { margin-top: 15px; font-weight: bold; }
+    </style>
 </head>
-
 <body>
+    <div class="card">
+        <h2>Cam-Link 👁️</h2>
+        <p>ادخل كود البث لمشاهدة الكاميرا:</p>
+        <input type="text" id="peer-id-input" placeholder="حط الكود هنا">
+        <br>
+        <button onclick="connectToPeer()">مشاهدة البث المباشر</button>
+        <div id="status"></div>
+        <video id="remoteVideo" autoplay playsinline controls></video>
+    </div>
 
-<div class="box">
+    <script>
+        const peer = new Peer();
 
-  <h1>👁️ Cam-Link</h1>
+        function connectToPeer() {
+            const remoteId = document.getElementById('peer-id-input').value.trim();
+            const statusDiv = document.getElementById('status');
 
-  <p>مشاهدة البث المباشر</p>
+            if (!remoteId) {
+                alert('يرجى كتابة أو لصق الكود أولاً');
+                return;
+            }
 
-  <input id="senderId" placeholder="اكتب كود صاحبك هنا">
+            statusDiv.innerText = '⏳ جاري الاتصال...';
 
-  <button onclick="connectToCamera()">
-    📡 مشاهدة البث
-  </button>
+            const call = peer.call(remoteId, null);
 
-  <div id="status">
-    جاهز
-  </div>
+            call.on('stream', (remoteStream) => {
+                document.getElementById('remoteVideo').srcObject = remoteStream;
+                statusDiv.innerText = '🟢 أنت تشاهد البث الآن!';
+            });
 
-  <video id="remoteVideo" autoplay playsinline controls></video>
-
-</div>
-
-<script>
-
-let peer;
-let currentCall;
-
-peer = new Peer();
-
-peer.on("open", function(id) {
-
-  document.getElementById("status").innerText =
-    "🟢 جاهز للمشاهدة";
-
-});
-
-peer.on("error", function(error) {
-
-  console.log(error);
-
-  document.getElementById("status").innerText =
-    "❌ حدث خطأ في الاتصال";
-
-});
-
-
-function connectToCamera() {
-
-  const senderId =
-    document.getElementById("senderId").value.trim();
-
-  if (!senderId) {
-
-    alert("اكتب كود صاحبك أولاً");
-
-    return;
-  }
-
-  document.getElementById("status").innerText =
-    "📡 جاري الاتصال...";
-
-  /*
-    لا نستخدم كاميرا اللابتوب هنا.
-    الصفحة تستقبل بث صاحبك فقط.
-  */
-
-  currentCall = peer.call(senderId, null);
-
-  currentCall.on("stream", function(stream) {
-
-    const video =
-      document.getElementById("remoteVideo");
-
-    video.srcObject = stream;
-
-    video.play();
-
-    document.getElementById("status").innerText =
-      "🟢 أنت تشاهد البث الآن";
-
-  });
-
-  currentCall.on("close", function() {
-
-    document.getElementById("status").innerText =
-      "⛔ تم إيقاف البث";
-
-    document.getElementById("remoteVideo").srcObject =
-      null;
-
-  });
-
-  currentCall.on("error", function(error) {
-
-    console.log(error);
-
-    document.getElementById("status").innerText =
-      "❌ فشل الاتصال";
-
-  });
-
-}
-
-</script>
-
+            call.on('error', (err) => {
+                statusDiv.innerText = '❌ تعذر الاتصال، تأكد من الكود أو أن البث يعمل.';
+            });
+        }
+    </script>
 </body>
 </html>
