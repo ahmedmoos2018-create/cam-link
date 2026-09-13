@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cam-Link - بدء البث</title>
+    <title>Cam-Link - بث الكاميرا</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         body { font-family: sans-serif; background: #0f172a; color: #fff; text-align: center; padding: 20px; }
@@ -11,19 +11,19 @@
         button { background: #2563eb; color: white; border: none; padding: 14px 20px; border-radius: 8px; font-size: 18px; cursor: pointer; width: 100%; font-weight: bold; }
         video { width: 100%; border-radius: 8px; margin-top: 15px; background: #000; }
         #status { margin-top: 15px; font-weight: bold; font-size: 16px; color: #38bdf8; }
-        .share-box { margin-top: 15px; display: none; background: #334155; padding: 10px; border-radius: 8px; word-break: break-all; }
+        .share-box { margin-top: 15px; display: none; background: #334155; padding: 10px; border-radius: 8px; }
         .copy-btn { background: #10b981; margin-top: 10px; }
     </style>
 </head>
 <body>
     <div class="card">
         <h2>Cam-Link 🎥</h2>
-        <p>اضغط لبدء البث المباشر الكاميرا</p>
+        <p>اضغط لبدء البث المباشر</p>
         <button id="start-btn" onclick="startStream()">🔴 بدء البث الأن</button>
         <div id="status"></div>
         
         <div id="share-box" class="share-box">
-            <p style="margin:0 0 8px 0; color:#cbd5e1;">إبعث الرابط ده لصاحبك على اللابتوب:</p>
+            <p style="margin:0 0 8px 0; color:#cbd5e1;">اضغط لنسخ رابط المشاهدة وإرساله:</p>
             <button class="copy-btn" onclick="copyLink()">📋 نسخ رابط المشاهدة</button>
         </div>
 
@@ -35,45 +35,55 @@
         let localStream;
         let shareUrl = "";
 
+        // سيرفرات Google STUN لتخطي حوائط حماية الشبكات
+        const peerConfig = {
+            config: {
+                'iceServers': [
+                    { urls: 'stun:stun.l.google.com:19302' },
+                    { urls: 'stun:stun1.l.google.com:19302' },
+                    { urls: 'stun:stun2.l.google.com:19302' }
+                ]
+            }
+        };
+
         async function startStream() {
             const statusDiv = document.getElementById('status');
             const startBtn = document.getElementById('start-btn');
             
             try {
                 startBtn.disabled = true;
-                statusDiv.innerText = '⏳ جاري تشغيل الكاميرا والسيرفر...';
+                statusDiv.innerText = '⏳ جاري تشغيل الكاميرا والمايك...';
                 
                 localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                 document.getElementById('localVideo').srcObject = localStream;
 
-                // إنشاء ID فريد نظيف
-                peer = new Peer();
+                peer = new Peer(peerConfig);
 
                 peer.on('open', (id) => {
-                    statusDiv.innerText = '🟢 الكاميرا شغال الآن ومستعدة للاتصال!';
+                    statusDiv.innerText = '🟢 الكاميرا جاهزة! انسخ الرابط وابعثه للاب توب';
                     shareUrl = `${window.location.origin}${window.location.pathname.replace('index.html', '')}viewer.html?room=${id}`;
                     document.getElementById('share-box').style.display = 'block';
                 });
 
                 peer.on('call', (call) => {
                     call.answer(localStream);
-                    statusDiv.innerText = '🔵 اللابتوب متصل ويشاهدك الآن!';
+                    statusDiv.innerText = '🔵 تم الاتصال باللابتوب والبث شغال الآن!';
                 });
 
                 peer.on('error', (err) => {
-                    statusDiv.innerText = '❌ حدث خطأ في السيرفر، جرب تنشيط الصفحة.';
+                    statusDiv.innerText = '❌ خطأ في الاتصال، أعد تحميل الصفحة.';
                     startBtn.disabled = false;
                 });
 
             } catch (err) {
-                alert('يرجى السماح باستخدام الكاميرا والمايك');
+                alert('يرجى السماح بالوصول للكاميرا والميكروفون');
                 startBtn.disabled = false;
             }
         }
 
         function copyLink() {
             navigator.clipboard.writeText(shareUrl).then(() => {
-                alert('تم نسخ الرابط! ابعثه لصاحبك على اللابتوب فوراً.');
+                alert('تم نسخ الرابط المباشر! ارسله للابتوب الآن.');
             });
         }
     </script>
