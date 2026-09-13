@@ -7,48 +7,44 @@
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         body { font-family: sans-serif; background: #0f172a; color: #fff; text-align: center; padding: 20px; }
-        .card { background: #1e293b; padding: 20px; border-radius: 12px; max-width: 500px; margin: auto; }
-        input { width: 90%; padding: 12px; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: #fff; font-size: 16px; text-align: center; margin-bottom: 15px; }
-        button { background: #2563eb; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-size: 16px; cursor: pointer; width: 95%; font-weight: bold; }
-        button:hover { background: #1d4ed8; }
-        video { width: 100%; border-radius: 8px; margin-top: 15px; background: #000; min-height: 250px; }
-        #status { margin-top: 15px; font-weight: bold; }
+        .card { background: #1e293b; padding: 20px; border-radius: 12px; max-width: 600px; margin: auto; }
+        button { background: #10b981; color: white; border: none; padding: 14px 20px; border-radius: 8px; font-size: 18px; cursor: pointer; width: 100%; font-weight: bold; }
+        button:hover { background: #059669; }
+        video { width: 100%; border-radius: 8px; margin-top: 15px; background: #000; min-height: 300px; }
+        #status { margin-top: 15px; font-weight: bold; font-size: 16px; }
     </style>
 </head>
 <body>
     <div class="card">
         <h2>Cam-Link 👁️</h2>
-        <p>ادخل كود البث لمشاهدة الكاميرا:</p>
-        <input type="text" id="peer-id-input" placeholder="حط الكود هنا">
-        <br>
-        <button onclick="connectToPeer()">مشاهدة البث المباشر</button>
+        <p>اضغط للاتصال المباشر بكاميرا الموبايل دون حاجة لكود</p>
+        <button onclick="connectToStream()">📺 مشاهدة البث الآن</button>
         <div id="status"></div>
         <video id="remoteVideo" autoplay playsinline controls></video>
     </div>
 
     <script>
-        const peer = new Peer();
+        const ROOM_ID = "ahmed-cam-link-room-777";
+        let peer;
 
-        function connectToPeer() {
-            const remoteId = document.getElementById('peer-id-input').value.trim();
+        function connectToStream() {
             const statusDiv = document.getElementById('status');
+            statusDiv.innerText = '⏳ جاري الاتصال بالبث المباشر...';
 
-            if (!remoteId) {
-                alert('يرجى كتابة أو لصق الكود أولاً');
-                return;
-            }
+            if (peer) peer.destroy();
+            peer = new Peer();
 
-            statusDiv.innerText = '⏳ جاري الاتصال...';
+            peer.on('open', () => {
+                const call = peer.call(ROOM_ID, null);
 
-            const call = peer.call(remoteId, null);
+                call.on('stream', (remoteStream) => {
+                    document.getElementById('remoteVideo').srcObject = remoteStream;
+                    statusDiv.innerText = '🟢 أنت تشاهد البث المباشر الآن!';
+                });
 
-            call.on('stream', (remoteStream) => {
-                document.getElementById('remoteVideo').srcObject = remoteStream;
-                statusDiv.innerText = '🟢 أنت تشاهد البث الآن!';
-            });
-
-            call.on('error', (err) => {
-                statusDiv.innerText = '❌ تعذر الاتصال، تأكد من الكود أو أن البث يعمل.';
+                call.on('error', (err) => {
+                    statusDiv.innerText = '❌ تعذر الاتصال، تأكد أن الموبايل ضغط على "بدء البث".';
+                });
             });
         }
     </script>
