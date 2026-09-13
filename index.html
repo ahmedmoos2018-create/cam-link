@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cam-Link - بث الكاميرا</title>
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+    <style>
+        body { font-family: sans-serif; background: #0f172a; color: #fff; text-align: center; padding: 20px; }
+        .card { background: #1e293b; padding: 20px; border-radius: 12px; max-width: 400px; margin: auto; }
+        button { background: #2563eb; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-size: 16px; cursor: pointer; margin-top: 10px; width: 100%; }
+        video { width: 100%; border-radius: 8px; margin-top: 15px; background: #000; }
+        .id-box { background: #334155; padding: 10px; border-radius: 6px; font-weight: bold; font-size: 18px; color: #38bdf8; word-break: break-all; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Cam-Link 🎥</h2>
+        <p>اضغط لبدء البث ومشاركة الكاميرا</p>
+        <button onclick="startStream()">بدء البث الأن</button>
+        <div id="status" style="margin-top: 15px;"></div>
+        <div id="peer-id-container" style="display:none;">
+            <p>الكود الخاص بك (ابعته لصاحبك):</p>
+            <div id="peer-id" class="id-box">جاري الإنشاء...</div>
+        </div>
+        <video id="localVideo" autoplay playsinline muted></video>
+    </div>
+
+    <script>
+        let peer;
+        let localStream;
+
+        async function startStream() {
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                document.getElementById('localVideo').srcObject = localStream;
+                
+                peer = new Peer();
+                peer.on('open', (id) => {
+                    document.getElementById('peer-id-container').style.display = 'block';
+                    document.getElementById('peer-id').innerText = id;
+                    document.getElementById('status').innerText = '🟢 جاهز للاتصال!';
+                });
+
+                peer.on('call', (call) => {
+                    call.answer(localStream);
+                    document.getElementById('status').innerText = '🔵 متصل الآن ويبث مباشر!';
+                });
+            } catch (err) {
+                alert('يرجى السماح بالوصول للكاميرا والمايك');
+            }
+        }
+    </script>
+</body>
+</html>
