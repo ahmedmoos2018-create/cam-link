@@ -16,14 +16,13 @@
 <body>
     <div class="card">
         <h2>Cam-Link 🎥</h2>
-        <p>اضغط لبدء البث المباشر تلقائياً</p>
+        <p>اضغط لبدء البث المباشر</p>
         <button onclick="startStream()">🔴 بدء البث الأن</button>
         <div id="status"></div>
         <video id="localVideo" autoplay playsinline muted></video>
     </div>
 
     <script>
-        const ROOM_ID = "ahmed-cam-link-room-777"; // معرف الغرفة الثابت
         let peer;
         let localStream;
 
@@ -33,26 +32,14 @@
                 localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                 document.getElementById('localVideo').srcObject = localStream;
                 
-                statusDiv.innerText = '⏳ جاري تجهيز الغرفة...';
+                statusDiv.innerText = '⏳ جاري بدء السيرفر...';
 
-                // الاتصال بمعرف الغرفة الثابت
-                peer = new Peer(ROOM_ID);
+                // إنشاء ID عشوائي ناعم وسريع
+                peer = new Peer();
 
                 peer.on('open', (id) => {
-                    statusDiv.innerText = '🟢 البث مباشر الآن! افتح اللابتوب للمشاهدة مباشرة.';
-                });
-
-                peer.on('call', (call) => {
-                    call.answer(localStream);
-                    statusDiv.innerText = '🔵 اللابتوب متصل الآن ويشاهد البث!';
-                });
-
-                peer.on('error', (err) => {
-                    if (err.type === 'unavailable-id') {
-                        statusDiv.innerText = '🟢 البث شغال بالفعل ومستعد للاتصال!';
-                    } else {
-                        statusDiv.innerText = '❌ حدث خطأ، يرجى إغلاق الصفحة وإعادة فتحها.';
-                    }
+                    // توجيه الصفحة مباشرة إلى رابط الغرفة
+                    window.location.href = `viewer.html?room=${id}`;
                 });
 
             } catch (err) {
@@ -61,4 +48,4 @@
         }
     </script>
 </body>
-</html>س
+</html>
