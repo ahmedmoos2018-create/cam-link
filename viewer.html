@@ -9,19 +9,19 @@
         body { font-family: sans-serif; background: #0f172a; color: #fff; text-align: center; padding: 20px; }
         .card { background: #1e293b; padding: 20px; border-radius: 12px; max-width: 600px; margin: auto; }
         input { width: 90%; padding: 12px; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: #fff; font-size: 16px; text-align: center; margin-bottom: 15px; }
-        button { background: #10b981; color: white; border: none; padding: 14px 20px; border-radius: 8px; font-size: 18px; cursor: pointer; width: 100%; font-weight: bold; }
+        button { background: #10b981; color: white; border: none; padding: 14px 20px; border-radius: 8px; font-size: 18px; cursor: pointer; width: 95%; font-weight: bold; }
         video { width: 100%; border-radius: 8px; margin-top: 15px; background: #000; min-height: 300px; }
-        #status { margin-top: 15px; font-weight: bold; font-size: 16px; }
+        #status { margin-top: 15px; font-weight: bold; font-size: 16px; color: #38bdf8; }
     </style>
 </head>
 <body>
     <div class="card">
         <h2>Cam-Link 👁️</h2>
-        <div id="input-section">
-            <p>ادخل كود البث للمشاهدة:</p>
-            <input type="text" id="peer-id-input" placeholder="ضع الكود هنا">
+        <div id="manual-input">
+            <p>ضع كود البث هنا إذا لم تفتح الرابط المباشر:</p>
+            <input type="text" id="peer-id-input" placeholder="الكود هنا">
+            <button onclick="manualConnect()">📺 مشاهدة البث الآن</button>
         </div>
-        <button onclick="connectToStream()">📺 مشاهدة البث الآن</button>
         <div id="status"></div>
         <video id="remoteVideo" autoplay playsinline controls></video>
     </div>
@@ -31,19 +31,8 @@
         const roomId = urlParams.get('room');
         const peer = new Peer();
 
-        if (roomId) {
-            document.getElementById('input-section').style.display = 'none';
-        }
-
-        function connectToStream() {
-            const targetId = roomId || document.getElementById('peer-id-input').value.trim();
+        function connect(targetId) {
             const statusDiv = document.getElementById('status');
-
-            if (!targetId) {
-                alert('يرجى إدخال كود البث أولاً');
-                return;
-            }
-
             statusDiv.innerText = '⏳ جاري الاتصال بالبث المباشر...';
 
             const call = peer.call(targetId, null);
@@ -54,14 +43,20 @@
             });
 
             call.on('error', (err) => {
-                statusDiv.innerText = '❌ تعذر الاتصال، تأكد أن صاحبك ما زال في صفحة البث.';
+                statusDiv.innerText = '❌ تعذر الاتصال، تأكد أن صاحبك ما زال فاتح صفحة البث.';
             });
         }
 
-        // لو الرابط فيه روم جاهز اتصل أوتوماتيك
+        function manualConnect() {
+            const id = document.getElementById('peer-id-input').value.trim();
+            if (id) connect(id);
+            else alert('يرجى إدخال الكود أولاً');
+        }
+
         peer.on('open', () => {
             if (roomId) {
-                connectToStream();
+                document.getElementById('manual-input').style.display = 'none';
+                connect(roomId);
             }
         });
     </script>

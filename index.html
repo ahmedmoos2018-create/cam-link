@@ -3,48 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cam-Link - بث الكاميرا</title>
+    <title>Cam-Link - بدء البث</title>
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         body { font-family: sans-serif; background: #0f172a; color: #fff; text-align: center; padding: 20px; }
         .card { background: #1e293b; padding: 20px; border-radius: 12px; max-width: 400px; margin: auto; }
         button { background: #2563eb; color: white; border: none; padding: 14px 20px; border-radius: 8px; font-size: 18px; cursor: pointer; width: 100%; font-weight: bold; }
         video { width: 100%; border-radius: 8px; margin-top: 15px; background: #000; }
-        #status { margin-top: 15px; font-weight: bold; font-size: 16px; }
+        #status { margin-top: 15px; font-weight: bold; font-size: 16px; color: #38bdf8; }
+        .share-box { margin-top: 15px; display: none; background: #334155; padding: 10px; border-radius: 8px; word-break: break-all; }
+        .copy-btn { background: #10b981; margin-top: 10px; }
     </style>
 </head>
 <body>
     <div class="card">
         <h2>Cam-Link 🎥</h2>
-        <p>اضغط لبدء البث المباشر</p>
-        <button onclick="startStream()">🔴 بدء البث الأن</button>
+        <p>اضغط لبدء البث المباشر الكاميرا</p>
+        <button id="start-btn" onclick="startStream()">🔴 بدء البث الأن</button>
         <div id="status"></div>
+        
+        <div id="share-box" class="share-box">
+            <p style="margin:0 0 8px 0; color:#cbd5e1;">إبعث الرابط ده لصاحبك على اللابتوب:</p>
+            <button class="copy-btn" onclick="copyLink()">📋 نسخ رابط المشاهدة</button>
+        </div>
+
         <video id="localVideo" autoplay playsinline muted></video>
     </div>
 
     <script>
         let peer;
         let localStream;
+        let shareUrl = "";
 
         async function startStream() {
             const statusDiv = document.getElementById('status');
+            const startBtn = document.getElementById('start-btn');
+            
             try {
+                startBtn.disabled = true;
+                statusDiv.innerText = '⏳ جاري تشغيل الكاميرا والسيرفر...';
+                
                 localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                 document.getElementById('localVideo').srcObject = localStream;
-                
-                statusDiv.innerText = '⏳ جاري بدء السيرفر...';
 
-                // إنشاء ID عشوائي ناعم وسريع
+                // إنشاء ID فريد نظيف
                 peer = new Peer();
 
                 peer.on('open', (id) => {
-                    // توجيه الصفحة مباشرة إلى رابط الغرفة
-                    window.location.href = `viewer.html?room=${id}`;
+                    statusDiv.innerText = '🟢 الكاميرا شغال الآن ومستعدة للاتصال!';
+                    shareUrl = `${window.location.origin}${window.location.pathname.replace('index.html', '')}viewer.html?room=${id}`;
+                    document.getElementById('share-box').style.display = 'block';
+                });
+
+                peer.on('call', (call) => {
+                    call.answer(localStream);
+                    statusDiv.innerText = '🔵 اللابتوب متصل ويشاهدك الآن!';
+                });
+
+                peer.on('error', (err) => {
+                    statusDiv.innerText = '❌ حدث خطأ في السيرفر، جرب تنشيط الصفحة.';
+                    startBtn.disabled = false;
                 });
 
             } catch (err) {
-                alert('يرجى السماح بالوصول للكاميرا والمايك');
+                alert('يرجى السماح باستخدام الكاميرا والمايك');
+                startBtn.disabled = false;
             }
+        }
+
+        function copyLink() {
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                alert('تم نسخ الرابط! ابعثه لصاحبك على اللابتوب فوراً.');
+            });
         }
     </script>
 </body>
